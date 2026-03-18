@@ -1,3 +1,13 @@
+.ticker-loading-note {
+  background: #0d0d0d;
+  border-bottom: 1px solid #1a1a1a;
+  color: #555;
+  font-size: 11px;
+  padding: 6px 16px;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
 .live-ticker-wrapper {
   display: flex;
   align-items: center;

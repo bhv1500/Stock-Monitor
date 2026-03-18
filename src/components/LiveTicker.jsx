@@ -10,6 +10,7 @@ export default function LiveTicker({ apiKey, watchlist }) {
   const [flash, setFlash] = useState({});
 
   const allSymbols = [...new Set([...DEFAULT_TICKER_SYMBOLS, ...watchlist.map((s) => s.symbol)])];
+  const hasData = Object.keys(quotes).length > 0;
 
   // Fetch initial REST quotes for all symbols
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function LiveTicker({ apiKey, watchlist }) {
   });
 
   return (
+    <>
     <div className="live-ticker-wrapper">
       <div className="live-dot" />
       <div className="ticker-scroll-container">
@@ -82,5 +84,11 @@ export default function LiveTicker({ apiKey, watchlist }) {
         </div>
       </div>
     </div>
+    {!hasData && (
+      <div className="ticker-loading-note">
+        ⏳ Fetching live market data via free API — this may take a few seconds...
+      </div>
+    )}
+    </>
   );
 }
