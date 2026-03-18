@@ -1,0 +1,109 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-box {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 40px;
+  width: 420px;
+  text-align: center;
+}
+
+.modal-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.modal-logo-icon {
+  font-size: 28px;
+}
+
+.modal-logo-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: #00c805;
+  letter-spacing: -0.5px;
+}
+
+.modal-box h2 {
+  font-size: 18px;
+  color: #fff;
+  margin: 0 0 10px;
+}
+
+.modal-box p {
+  color: #888;
+  font-size: 13px;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.modal-box a {
+  color: #00c805;
+  text-decoration: none;
+}
+
+.modal-box a:hover {
+  text-decoration: underline;
+}
+
+.modal-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal-box input {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  padding: 12px 16px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: 'Courier New', monospace;
+}
+
+.modal-box input:focus {
+  border-color: #00c805;
+}
+
+.modal-box button {
+  background: #00c805;
+  border: none;
+  border-radius: 24px;
+  color: #000;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px;
+  transition: opacity 0.2s;
+}
+
+.modal-box button:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.modal-box button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modal-note {
+  font-size: 11px !important;
+  color: #555 !important;
+  margin-top: 16px !important;
+}

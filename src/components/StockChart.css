@@ -1,0 +1,106 @@
+.stock-chart-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.chart-symbol-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-symbol {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.chart-price {
+  font-size: 36px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+
+.chart-change {
+  font-size: 15px;
+  font-weight: 600;
+}
+.chart-change.pos { color: #00c805; }
+.chart-change.neg { color: #ff5000; }
+
+.chart-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 13px;
+  color: #ccc;
+  font-weight: 500;
+}
+
+.chart-area {
+  height: 260px;
+}
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #444;
+  font-size: 13px;
+}
+
+.chart-tooltip {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chart-tooltip span {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tooltip-time {
+  color: #555 !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+}
