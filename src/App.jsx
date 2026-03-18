@@ -1,52 +1,59 @@
-import { useState, useCallback } from 'react';
-import Header from './components/Header';
-import LiveTicker from './components/LiveTicker';
-import StockChart from './components/StockChart';
-import Watchlist from './components/Watchlist';
-import Portfolio from './components/Portfolio';
-import ApiKeyModal from './components/ApiKeyModal';
-import { useFinnhubWebSocket } from './hooks/useFinnhub';
-import './App.css';
+import { useState, useCallback } from "react";
+import Header from "./components/Header";
+import LiveTicker from "./components/LiveTicker";
+import StockChart from "./components/StockChart";
+import Watchlist from "./components/Watchlist";
+import Portfolio from "./components/Portfolio";
+import { useFinnhubWebSocket } from "./hooks/useFinnhub";
+import "./App.css";
 
-const DEFAULT_SYMBOLS = ['AAPL', 'TSLA', 'NVDA', 'GOOGL', 'MSFT', 'AMZN', 'META', 'SPY', 'QQQ', 'AMD'];
+const API_KEY = "d6t64fhr01qoqoisd2k0d6t64fhr01qoqoisd2kg";
+
+const DEFAULT_SYMBOLS = [
+  "AAPL",
+  "TSLA",
+  "NVDA",
+  "GOOGL",
+  "MSFT",
+  "AMZN",
+  "META",
+  "SPY",
+  "QQQ",
+  "AMD",
+];
 
 export default function App() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('finnhub_api_key') || '');
-  const [selectedSymbol, setSelectedSymbol] = useState('AAPL');
+  const [selectedSymbol, setSelectedSymbol] = useState("AAPL");
   const [livePrices, setLivePrices] = useState({});
   const [portfolioItems] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('portfolio') || '[]'); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem("portfolio") || "[]");
+    } catch {
+      return [];
+    }
   });
 
-  const allSymbols = [...new Set([...DEFAULT_SYMBOLS, ...portfolioItems.map((i) => i.symbol)])];
+  const allSymbols = [
+    ...new Set([...DEFAULT_SYMBOLS, ...portfolioItems.map((i) => i.symbol)]),
+  ];
 
-  useFinnhubWebSocket(allSymbols, apiKey, useCallback((trade) => {
-    setLivePrices((prev) => ({ ...prev, [trade.s]: trade.p }));
-  }, []));
-
-  const saveApiKey = (key) => {
-    localStorage.setItem('finnhub_api_key', key);
-    setApiKey(key);
-  };
-
-  const resetKey = () => {
-    localStorage.removeItem('finnhub_api_key');
-    setApiKey('');
-  };
-
-  if (!apiKey) {
-    return <ApiKeyModal onSave={saveApiKey} />;
-  }
+  useFinnhubWebSocket(
+    allSymbols,
+    API_KEY,
+    useCallback((trade) => {
+      setLivePrices((prev) => ({ ...prev, [trade.s]: trade.p }));
+    }, []),
+  );
 
   return (
     <div className="app">
-      <Header onResetKey={resetKey} />
-      <LiveTicker apiKey={apiKey} watchlist={portfolioItems} />
+      <Header />
+      <LiveTicker apiKey={API_KEY} watchlist={portfolioItems} />
 
       <main className="main-content">
-        <StockChart symbol={selectedSymbol} apiKey={apiKey} />
+        <StockChart symbol={selectedSymbol} apiKey={API_KEY} />
         <Watchlist
-          apiKey={apiKey}
+          apiKey={API_KEY}
           onSelect={setSelectedSymbol}
           selectedSymbol={selectedSymbol}
           livePrices={livePrices}
@@ -59,7 +66,7 @@ export default function App() {
         </div>
 
         <Portfolio
-          apiKey={apiKey}
+          apiKey={API_KEY}
           livePrices={livePrices}
           onSelect={setSelectedSymbol}
         />
