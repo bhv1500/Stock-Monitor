@@ -1,6 +1,7 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFinnhubCandles, useFinnhubQuote } from '../hooks/useFinnhub';
-import { formatPrice, formatChange, formatPercent, formatVolume, formatMarketCap } from '../utils/formatters';
+import { useYahooCandles } from '../hooks/useYahooCandles';
+import { formatPrice, formatChange, formatPercent } from '../utils/formatters';
 import './StockChart.css';
 
 const CustomTooltip = ({ active, payload }) => {
@@ -16,8 +17,18 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 export default function StockChart({ symbol, apiKey }) {
-  const { candles, loading: candleLoading } = useFinnhubCandles(symbol, apiKey);
+  const { candles: finnhubCandles, loading: finnhubLoading, rangeLabel: finnhubLabel } = useFinnhubCandles(symbol, apiKey);
   const { data: quote } = useFinnhubQuote(symbol, apiKey);
+
+  // Use Yahoo Finance as fallback when Finnhub returns no candles
+  const finnhubDone = !finnhubLoading;
+  const needsYahoo = finnhubDone && finnhubCandles.length === 0;
+  const { candles: yahooCandles, loading: yahooLoading, rangeLabel: yahooLabel } = useYahooCandles(symbol, needsYahoo);
+
+  const candles = finnhubCandles.length > 0 ? finnhubCandles : yahooCandles;
+  const rangeLabel = finnhubCandles.length > 0 ? finnhubLabel : yahooLabel;
+  const isYahoo = finnhubCandles.length === 0 && yahooCandles.length > 0;
+  const loading = finnhubLoading || (needsYahoo && yahooLoading);
 
   const isPositive = quote ? quote.d >= 0 : true;
   const color = isPositive ? '#00c805' : '#ff5000';
@@ -61,11 +72,23 @@ export default function StockChart({ symbol, apiKey }) {
         )}
       </div>
 
+      {rangeLabel && (
+        <div className="chart-range-note">
+          {isYahoo
+            ? `Past ${rangeLabel} · Historical data via Yahoo Finance`
+            : rangeLabel !== '1D'
+            ? `Showing ${rangeLabel} · Intraday unavailable (market closed)`
+            : null}
+        </div>
+      )}
+
       <div className="chart-area">
-        {candleLoading ? (
-          <div className="chart-loading">Loading chart...</div>
+        {loading ? (
+          <div className="chart-loading">
+            <span className="chart-spinner" /> Loading chart...
+          </div>
         ) : candles.length === 0 ? (
-          <div className="chart-loading">No chart data available (market may be closed)</div>
+          <div className="chart-loading">No chart data available</div>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={candles} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>

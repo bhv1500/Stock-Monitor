@@ -1,8 +1,6 @@
-import { useState } from 'react';
-import { FiSettings, FiRefreshCw } from 'react-icons/fi';
 import './Header.css';
 
-export default function Header() {
+export default function Header({ activeSection, onNav }) {
   return (
     <header className="header">
       <div className="header-inner">
@@ -12,8 +10,18 @@ export default function Header() {
         </div>
 
         <nav className="header-nav">
-          <span className="nav-item active">Markets</span>
-          <span className="nav-item">Portfolio</span>
+          <span
+            className={`nav-item ${activeSection === 'markets' ? 'active' : ''}`}
+            onClick={() => onNav('markets')}
+          >
+            Markets
+          </span>
+          <span
+            className={`nav-item ${activeSection === 'portfolio' ? 'active' : ''}`}
+            onClick={() => onNav('portfolio')}
+          >
+            Portfolio
+          </span>
         </nav>
       </div>
     </header>

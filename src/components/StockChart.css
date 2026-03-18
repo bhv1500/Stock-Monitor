@@ -74,13 +74,39 @@
   height: 260px;
 }
 
+.chart-range-note {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  background: #161616;
+  border-radius: 6px;
+  border-left: 2px solid #333;
+  display: inline-block;
+}
+
 .chart-loading {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   height: 100%;
   color: #444;
   font-size: 13px;
+}
+
+.chart-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #2a2a2a;
+  border-top-color: #555;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .chart-tooltip {

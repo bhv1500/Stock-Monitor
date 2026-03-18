@@ -34,37 +34,50 @@ export const useFinnhubQuote = (symbol, apiKey) => {
   return { data, loading, error, refetch: fetchQuote };
 };
 
+const CANDLE_ATTEMPTS = [
+  { label: '1D', resolution: '5',  seconds: 60 * 60 * 24,      timeFormat: { hour: '2-digit', minute: '2-digit' } },
+  { label: '1W', resolution: '60', seconds: 60 * 60 * 24 * 7,  timeFormat: { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' } },
+  { label: '1M', resolution: 'D',  seconds: 60 * 60 * 24 * 30, timeFormat: { month: 'short', day: 'numeric' } },
+  { label: '3M', resolution: 'D',  seconds: 60 * 60 * 24 * 90, timeFormat: { month: 'short', day: 'numeric' } },
+];
+
 export const useFinnhubCandles = (symbol, apiKey) => {
   const [candles, setCandles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [rangeLabel, setRangeLabel] = useState('');
 
   useEffect(() => {
     if (!symbol || !apiKey) return;
+    setCandles([]);
     const fetchCandles = async () => {
       setLoading(true);
       try {
         const to = Math.floor(Date.now() / 1000);
-        const from = to - 60 * 60 * 24; // last 24h
-        const res = await fetch(
-          `${FINNHUB_API_BASE}/stock/candle?symbol=${symbol}&resolution=5&from=${from}&to=${to}&token=${apiKey}`,
-        );
-        const json = await res.json();
-        if (json.s === "ok" && json.c) {
-          const formatted = json.t.map((time, i) => ({
-            time: new Date(time * 1000).toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            price: json.c[i],
-            open: json.o[i],
-            high: json.h[i],
-            low: json.l[i],
-            volume: json.v[i],
-          }));
-          setCandles(formatted);
+        for (const attempt of CANDLE_ATTEMPTS) {
+          const from = to - attempt.seconds;
+          const res = await fetch(
+            `${FINNHUB_API_BASE}/stock/candle?symbol=${symbol}&resolution=${attempt.resolution}&from=${from}&to=${to}&token=${apiKey}`,
+          );
+          const json = await res.json();
+          if (json.s === 'ok' && json.c && json.c.length > 1) {
+            const formatted = json.t.map((time, i) => ({
+              time: new Date(time * 1000).toLocaleString('en-US', attempt.timeFormat),
+              price: json.c[i],
+              open: json.o[i],
+              high: json.h[i],
+              low: json.l[i],
+              volume: json.v[i],
+            }));
+            setCandles(formatted);
+            setRangeLabel(attempt.label);
+            return;
+          }
         }
+        // All attempts exhausted — no data
+        setCandles([]);
+        setRangeLabel('');
       } catch (err) {
-        console.error("Candle fetch error:", err);
+        console.error('Candle fetch error:', err);
       } finally {
         setLoading(false);
       }
@@ -72,7 +85,7 @@ export const useFinnhubCandles = (symbol, apiKey) => {
     fetchCandles();
   }, [symbol, apiKey]);
 
-  return { candles, loading };
+  return { candles, loading, rangeLabel };
 };
 
 export const useFinnhubWebSocket = (symbols, apiKey, onTrade) => {
