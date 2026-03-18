@@ -20,7 +20,7 @@ A real-time stock market dashboard built with React, inspired by the Robinhood U
 
 | Layer | Technology |
 |---|---|
-| Framework | React 19 (no TypeScript) |
+| Framework | React 19 |
 | Build tool | Vite 8 |
 | Charts | Recharts |
 | Icons | react-icons |
