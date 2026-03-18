@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 
-// corsproxy.io is a free CORS proxy — needed because Yahoo Finance blocks direct browser requests
-const CORS_PROXY = 'https://corsproxy.io/?url=';
+// Multiple CORS proxies as fallbacks in case one is down
+const CORS_PROXIES = [
+  (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
 
 const YAHOO_RANGES = [
   { range: '5d',  interval: '30m', label: '5D', timeFormat: { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' } },
@@ -32,6 +36,9 @@ const parseResult = (json, timeFormat) => {
   return formatted.length >= 2 ? formatted : null;
 };
 
+const isLocalhost = typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 export const useYahooCandles = (symbol, enabled) => {
   const [candles, setCandles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,12 +60,14 @@ export const useYahooCandles = (symbol, enabled) => {
       for (const attempt of YAHOO_RANGES) {
         if (cancelled) break;
 
-        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${attempt.interval}&range=${attempt.range}&includePrePost=false&corsDomain=finance.yahoo.com`;
+        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${attempt.interval}&range=${attempt.range}&includePrePost=false`;
 
-        // Try direct first, then via CORS proxy
-        const urls = [yahooUrl, `${CORS_PROXY}${encodeURIComponent(yahooUrl)}`];
+        // On localhost try direct first; on deployed always go straight to proxies
+        const urlsToTry = isLocalhost
+          ? [yahooUrl, ...CORS_PROXIES.map((p) => p(yahooUrl))]
+          : CORS_PROXIES.map((p) => p(yahooUrl));
 
-        for (const url of urls) {
+        for (const url of urlsToTry) {
           if (cancelled) break;
           try {
             const res = await fetch(url, { headers: { Accept: 'application/json' } });
@@ -74,7 +83,7 @@ export const useYahooCandles = (symbol, enabled) => {
             }
             return;
           } catch (err) {
-            console.warn(`Yahoo chart fetch failed [${attempt.range}]:`, err.message);
+            console.warn(`Chart fetch failed [${attempt.range}] via ${url.slice(0, 40)}:`, err.message);
           }
         }
       }
