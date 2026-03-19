@@ -1,5 +1,5 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { useFinnhubCandles, useFinnhubQuote } from '../hooks/useFinnhub';
+import { useFinnhubCandles } from '../hooks/useFinnhub';
 import { useYahooCandles } from '../hooks/useYahooCandles';
 import { formatPrice, formatChange, formatPercent } from '../utils/formatters';
 import './StockChart.css';
@@ -16,9 +16,8 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function StockChart({ symbol, apiKey }) {
+export default function StockChart({ symbol, apiKey, quote }) {
   const { candles: finnhubCandles, loading: finnhubLoading, rangeLabel: finnhubLabel } = useFinnhubCandles(symbol, apiKey);
-  const { data: quote } = useFinnhubQuote(symbol, apiKey);
 
   // Use Yahoo Finance as fallback when Finnhub returns no candles
   const finnhubDone = !finnhubLoading;

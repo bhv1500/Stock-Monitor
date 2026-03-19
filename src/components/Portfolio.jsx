@@ -1,21 +1,25 @@
 import { useState, useRef } from 'react';
-import { useFinnhubQuote } from '../hooks/useFinnhub';
+import { ALL_SYMBOLS } from './Watchlist';
 import { formatPrice, formatChange, formatPercent } from '../utils/formatters';
 import { FiPlus, FiTrash2, FiTrendingUp, FiTrendingDown, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
 import './Portfolio.css';
 
-function PortfolioRow({ item, apiKey, livePrices, onDelete, onUpdate, onSelect }) {
-  const { data: quote } = useFinnhubQuote(item.symbol, apiKey);
+function PortfolioRow({ item, livePrices, portfolioQuotes, onDelete, onUpdate, onSelect }) {
   const [editing, setEditing] = useState(false);
   const [editShares, setEditShares] = useState(item.shares);
   const [editAvgCost, setEditAvgCost] = useState(item.avgCost);
 
+  // Use live WebSocket price first, then watchlist quote, then portfolio-specific quote
+  const quote = portfolioQuotes[item.symbol];
   const currentPrice = livePrices[item.symbol] || quote?.c;
+  const dailyChange = quote?.d;
+  const dailyChangePct = quote?.dp;
+
   const marketValue = currentPrice && item.shares ? currentPrice * item.shares : null;
   const costBasis = item.avgCost && item.shares ? item.avgCost * item.shares : null;
   const gainLoss = marketValue && costBasis ? marketValue - costBasis : null;
   const gainLossPct = costBasis && gainLoss !== null ? (gainLoss / costBasis) * 100 : null;
-  const isPositive = gainLoss >= 0;
+  const isPositive = gainLoss !== null ? gainLoss >= 0 : dailyChange >= 0;
 
   const saveEdit = () => {
     onUpdate(item.id, { shares: parseFloat(editShares) || 0, avgCost: parseFloat(editAvgCost) || 0 });
@@ -85,7 +89,7 @@ function PortfolioRow({ item, apiKey, livePrices, onDelete, onUpdate, onSelect }
       </div>
 
       <div className="pr-right">
-        {!editing ? (
+        {!editing && (
           <>
             <div className="pr-prices">
               <span className="pr-current">{formatPrice(currentPrice)}</span>
@@ -93,22 +97,21 @@ function PortfolioRow({ item, apiKey, livePrices, onDelete, onUpdate, onSelect }
                 <span className="pr-mval">{formatPrice(marketValue)}</span>
               )}
             </div>
-            {gainLoss !== null && (
+            {gainLoss !== null ? (
               <div className={`pr-gain ${isPositive ? 'pos' : 'neg'}`}>
                 {isPositive ? <FiTrendingUp size={11} /> : <FiTrendingDown size={11} />}
                 <span>{formatChange(gainLoss)}</span>
                 <span>({formatPercent(gainLossPct)})</span>
               </div>
-            )}
-            {quote && !marketValue && (
-              <div className={`pr-gain ${quote.d >= 0 ? 'pos' : 'neg'}`}>
-                {quote.d >= 0 ? <FiTrendingUp size={11} /> : <FiTrendingDown size={11} />}
-                <span>{formatChange(quote.d)}</span>
-                <span>({formatPercent(quote.dp)})</span>
+            ) : dailyChange != null ? (
+              <div className={`pr-gain ${dailyChange >= 0 ? 'pos' : 'neg'}`}>
+                {dailyChange >= 0 ? <FiTrendingUp size={11} /> : <FiTrendingDown size={11} />}
+                <span>{formatChange(dailyChange)}</span>
+                <span>({formatPercent(dailyChangePct)})</span>
               </div>
-            )}
+            ) : null}
           </>
-        ) : null}
+        )}
       </div>
 
       <div className="pr-actions">
@@ -136,21 +139,14 @@ function PortfolioRow({ item, apiKey, livePrices, onDelete, onUpdate, onSelect }
   );
 }
 
-export default function Portfolio({ apiKey, livePrices, onSelect }) {
-  const [items, setItems] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('portfolio') || '[]');
-    } catch {
-      return [];
-    }
-  });
+export default function Portfolio({ apiKey, livePrices, portfolioQuotes, items, onItemsChange, onSelect }) {
   const [input, setInput] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef(null);
 
   const saveItems = (next) => {
-    setItems(next);
+    onItemsChange(next);
     localStorage.setItem('portfolio', JSON.stringify(next));
   };
 
@@ -164,9 +160,7 @@ export default function Portfolio({ apiKey, livePrices, onSelect }) {
     setAdding(true);
     setError('');
     try {
-      const res = await fetch(
-        `https://finnhub.io/api/v1/search?q=${sym}&token=${apiKey}`
-      );
+      const res = await fetch(`https://finnhub.io/api/v1/search?q=${sym}&token=${apiKey}`);
       const json = await res.json();
       const match = json.result?.find((r) => r.symbol === sym) || json.result?.[0];
       const newItem = {
@@ -187,16 +181,14 @@ export default function Portfolio({ apiKey, livePrices, onSelect }) {
     }
   };
 
-  const deleteItem = (id) => {
-    saveItems(items.filter((i) => i.id !== id));
-  };
+  const deleteItem = (id) => saveItems(items.filter((i) => i.id !== id));
+  const updateItem = (id, patch) => saveItems(items.map((i) => (i.id === id ? { ...i, ...patch } : i)));
 
-  const updateItem = (id, patch) => {
-    saveItems(items.map((i) => (i.id === id ? { ...i, ...patch } : i)));
-  };
+  // Build a merged quotes map: watchlist symbols come from livePrices + portfolioQuotes
+  const allQuotes = { ...portfolioQuotes };
 
   const totalValue = items.reduce((sum, item) => {
-    const price = livePrices[item.symbol];
+    const price = livePrices[item.symbol] || allQuotes[item.symbol]?.c;
     if (price && item.shares) return sum + price * item.shares;
     return sum;
   }, 0);
@@ -243,16 +235,8 @@ export default function Portfolio({ apiKey, livePrices, onSelect }) {
             onKeyDown={(e) => e.key === 'Enter' && addItem()}
             maxLength={10}
           />
-          <button
-            className="add-btn"
-            onClick={addItem}
-            disabled={!input.trim() || adding}
-          >
-            {adding ? (
-              <span className="add-spinner" />
-            ) : (
-              <FiPlus size={16} />
-            )}
+          <button className="add-btn" onClick={addItem} disabled={!input.trim() || adding}>
+            {adding ? <span className="add-spinner" /> : <FiPlus size={16} />}
           </button>
         </div>
         {error && <span className="add-error">{error}</span>}
@@ -274,8 +258,8 @@ export default function Portfolio({ apiKey, livePrices, onSelect }) {
                   <PortfolioRow
                     key={item.id}
                     item={item}
-                    apiKey={apiKey}
                     livePrices={livePrices}
+                    portfolioQuotes={allQuotes}
                     onDelete={deleteItem}
                     onUpdate={updateItem}
                     onSelect={onSelect}
@@ -284,7 +268,6 @@ export default function Portfolio({ apiKey, livePrices, onSelect }) {
               </div>
             </div>
           )}
-
           {reviewed.length > 0 && (
             <div className="portfolio-section">
               <div className="section-label reviewed-label">Reviewed ({reviewed.length})</div>
@@ -293,8 +276,8 @@ export default function Portfolio({ apiKey, livePrices, onSelect }) {
                   <PortfolioRow
                     key={item.id}
                     item={item}
-                    apiKey={apiKey}
                     livePrices={livePrices}
+                    portfolioQuotes={allQuotes}
                     onDelete={deleteItem}
                     onUpdate={updateItem}
                     onSelect={onSelect}

@@ -3,7 +3,13 @@ import { useFinnhubWebSocket } from '../hooks/useFinnhub';
 import { formatPrice, formatPercent, formatChange } from '../utils/formatters';
 import './LiveTicker.css';
 
-const DEFAULT_TICKER_SYMBOLS = ['AAPL', 'TSLA', 'GOOGL', 'MSFT', 'AMZN', 'NVDA', 'META', 'SPY', 'QQQ', 'AMD'];
+const DEFAULT_TICKER_SYMBOLS = [
+  'AAPL', 'MSFT', 'NVDA', 'GOOGL', 'TSLA',
+  'AMD', 'NFLX', 'ADBE', 'UBER',
+  'JPM', 'V', 'BAC',
+  'JNJ', 'UNH', 'PFE',
+  'SPY', 'QQQ', 'IWM', 'GLD', 'VTI',
+];
 
 export default function LiveTicker({ apiKey, watchlist }) {
   const [quotes, setQuotes] = useState({});   // { SYM: { price, change, changePercent } }
@@ -86,7 +92,7 @@ export default function LiveTicker({ apiKey, watchlist }) {
     </div>
     {!hasData && (
       <div className="ticker-loading-note">
-        ⏳ Fetching live market data via free API — this may take a few seconds...
+        ⏳ Fetching live market data — this may take a few seconds...
       </div>
     )}
     </>

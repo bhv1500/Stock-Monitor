@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useFinnhubQuote } from '../hooks/useFinnhub';
 import { formatPrice, formatChange, formatPercent } from '../utils/formatters';
 import './StockCard.css';
 
-export default function StockCard({ symbol, apiKey, onClick, isSelected, livePrice }) {
-  const { data: quote, loading } = useFinnhubQuote(symbol, apiKey);
+export default function StockCard({ symbol, quote, onClick, isSelected, livePrice }) {
   const [flash, setFlash] = useState(null);
   const [prevLive, setPrevLive] = useState(null);
 
@@ -26,7 +24,7 @@ export default function StockCard({ symbol, apiKey, onClick, isSelected, livePri
       className={`stock-card ${isSelected ? 'selected' : ''} ${flash ? `flash-${flash}` : ''}`}
       onClick={() => onClick(symbol)}
     >
-      {loading && !quote ? (
+      {!quote ? (
         <div className="card-skeleton">
           <div className="sk sk-title" />
           <div className="sk sk-price" />

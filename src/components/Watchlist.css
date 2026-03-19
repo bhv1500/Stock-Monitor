@@ -1,5 +1,41 @@
+.watchlist-loading-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  color: #666;
+  font-size: 12px;
+  padding: 10px 16px;
+  margin-bottom: 4px;
+}
+
+.watchlist-loading-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid #2a2a2a;
+  border-top-color: #00c805;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .watchlist {
   margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.watchlist-category {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .watchlist-header {
